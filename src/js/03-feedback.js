@@ -2,52 +2,40 @@ const formEl = document.querySelector('.feedback-form');
 const storageKey = 'feedback-form-state';
 const throttleInput = require('lodash.throttle');
 
-const {
-  elements: { email, message },
-} = formEl;
+let data = {};
 
 // Зчитування даних з полів та збереження їх у вигляді об'єкту
-formEl.addEventListener('input', throttleInput(saveDataForm, 500));
+formEl.addEventListener('input', throttleInput(saveData, 500));
+formEl.addEventListener('submit', onFormSubmit);
 
-function saveDataForm() {
-  const formData = {
-    email: '',
-    message: '',
-  };
-
-  formData.email = email.value;
-  formData.message = message.value;
-  localStorage.setItem(storageKey, JSON.stringify(formData));
+function saveData({ target: { name, value } }) {
+  data[name] = value;
+  localStorage.setItem(storageKey, JSON.stringify(data));
 }
 
 // Заповнення полів форми, збереженими даними у сховище
-document.addEventListener('DOMContentLoaded', loadDataForm);
-
-function loadDataForm() {
-  if (!localStorage.getItem(storageKey)) {
-    email.removeAttribute('value');
-    message.textContent = '';
-  } else {
-    const savedDataFormObj = JSON.parse(localStorage.getItem(storageKey));
-    if (savedDataFormObj.email) {
-      email.setAttribute('value', savedDataFormObj.email);
-    }
-    message.textContent = savedDataFormObj.message;
+function setData() {
+  if (localStorage.getItem(storageKey)) {
+    data = JSON.parse(localStorage.getItem(storageKey));
+    const { email, message }  = data;
+    formEl.elements.email.value = email || '';
+    formEl.elements.message.value = message || '';
   }
 }
 
 // Очищення сховища і полів, та виведення у консоль об'єкта з поточними даними
-formEl.addEventListener('submit', update);
-
-function update(event) {
+function onFormSubmit(event) {
   event.preventDefault();
-
-  if (!localStorage.getItem(storageKey) || !message.value || !email.value) {
+  if (
+    formEl.elements.email.value === '' ||
+    formEl.elements.message.value === '' 
+  ) {
+    alert( 'Заповніть всі поля!!!');
     return;
-  } else {
-    console.log(JSON.parse(localStorage.getItem(storageKey)));
-    localStorage.clear();
-    formEl.reset();
-    loadDataForm();
   }
+  formEl.reset();
+console.log(data);
+localStorage.removeItem(storageKey);
 }
+
+setData();
